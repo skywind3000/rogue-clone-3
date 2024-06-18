@@ -538,9 +538,7 @@ xxxx(buf, n)
 	}
 }
 
-long
-xxx(st)
-	boolean st;
+long xxx(boolean st)
 {
 	static long f, s;
 	long r;

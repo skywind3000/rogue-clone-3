@@ -437,7 +437,13 @@ struct rogue_time {
 	short second;	/* 0 - 59 */
 };
 
+#if HAVE_NCURSES
+#include <ncurses/curses.h>
+#elif HAVE_PDCURSES
+#include <pdcurses/curses.h>
+#else
 #include <curses.h>
+#endif
 
 /*
  * external routine declarations.

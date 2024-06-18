@@ -117,6 +117,20 @@ __RCSID("$NetBSD: machdep.c,v 1.13 2005/02/15 12:56:20 jsm Exp $");
 #include "rogue.h"
 // #include "pathnames.h"
 
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <direct.h>
+#include <io.h>
+#include <time.h>
+#include <signal.h>
+#include <synchapi.h>
+
+#include "rogue.h"
+
+#endif
+
 /* md_slurp:
  *
  * This routine throws away all keyboard input that has not
@@ -129,10 +143,11 @@ __RCSID("$NetBSD: machdep.c,v 1.13 2005/02/15 12:56:20 jsm Exp $");
  * big deal.
  */
 
-void
-md_slurp()
+void md_slurp()
 {
+#ifndef WINDOWS
 	tcflush(0, TCIFLUSH);
+#endif
 }
 
 /* md_heed_signals():
@@ -151,12 +166,13 @@ md_slurp()
  * input, this is not usually critical.
  */
 
-void
-md_heed_signals()
+void md_heed_signals()
 {
 	signal(SIGINT, onintr);
+#ifndef WINDOWS
 	signal(SIGQUIT, byebye);
 	signal(SIGHUP, error_save);
+#endif
 }
 
 /* md_ignore_signals():
@@ -171,12 +187,13 @@ md_heed_signals()
  * file, corruption.
  */
 
-void
-md_ignore_signals()
+void md_ignore_signals()
 {
-	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, SIG_IGN);
+#ifndef WINDOWS
 	signal(SIGHUP, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+#endif
 }
 
 /* md_get_file_id():
@@ -189,15 +206,17 @@ md_ignore_signals()
  */
 
 int
-md_get_file_id(fname)
-	const char *fname;
+md_get_file_id(const char *fname)
 {
+#ifdef WINDOWS
+	return 0;
+#else
 	struct stat sbuf;
-
 	if (stat(fname, &sbuf)) {
 		return(-1);
 	}
 	return((int) sbuf.st_ino);
+#endif
 }
 
 /* md_link_count():
@@ -208,15 +227,17 @@ md_get_file_id(fname)
  * this routine can be stubbed by just returning 1.
  */
 
-int
-md_link_count(fname)
-	const char *fname;
+int md_link_count(const char *fname)
 {
+#ifdef WINDOWS
+	return 0;
+#else
 	struct stat sbuf;
-
 	stat(fname, &sbuf);
 	return((int) sbuf.st_nlink);
+#endif
 }
+
 
 /* md_gct(): (Get Current Time)
  *
@@ -232,9 +253,7 @@ md_link_count(fname)
  * saved-game files and play them.  
  */
 
-void
-md_gct(rt_buf)
-	struct rogue_time *rt_buf;
+void md_gct(struct rogue_time *rt_buf)
 {
 	struct tm *t;
 	time_t seconds;
@@ -249,6 +268,7 @@ md_gct(rt_buf)
 	rt_buf->minute = t->tm_min;
 	rt_buf->second = t->tm_sec;
 }
+
 
 /* md_gfmt: (Get File Modification Time)
  *
@@ -266,11 +286,10 @@ md_gct(rt_buf)
  * saved-games that have been modified.
  */
 
-void
-md_gfmt(fname, rt_buf)
-	const char *fname;
-	struct rogue_time *rt_buf;
+void md_gfmt(const char *fname, struct rogue_time *rt_buf)
 {
+#ifdef WINDOWS
+#else
 	struct stat sbuf;
 	time_t seconds;
 	struct tm *t;
@@ -285,7 +304,9 @@ md_gfmt(fname, rt_buf)
 	rt_buf->hour = t->tm_hour;
 	rt_buf->minute = t->tm_min;
 	rt_buf->second = t->tm_sec;
+#endif
 }
+
 
 /* md_df: (Delete File)
  *
@@ -298,15 +319,20 @@ md_gfmt(fname, rt_buf)
  * deleted and can be replayed.
  */
 
-boolean
-md_df(fname)
-	const char *fname;
+boolean md_df(const char *fname)
 {
+#ifdef WINDOWS
+	if (_unlink(fname)) {
+		return(0);
+	}
+#else
 	if (unlink(fname)) {
 		return(0);
 	}
+#endif
 	return(1);
 }
+
 
 /* md_gln: (Get login name)
  *
@@ -317,15 +343,18 @@ md_df(fname)
  * function, but then the score file would only have one name in it.
  */
 
-const char *
-md_gln()
+const char *md_gln(void)
 {
+#ifdef WINDOWS
+	return "Unknown";
+#else
 	struct passwd *p;
-
 	if (!(p = getpwuid(getuid())))
 		return((char *)NULL);
 	return(p->pw_name);
+#endif
 }
+
 
 /* md_sleep:
  *
@@ -336,12 +365,15 @@ md_gln()
  * delaying execution, which is useful to this program at some times.
  */
 
-void
-md_sleep(nsecs)
-	int nsecs;
+void md_sleep(int nsecs)
 {
+#ifdef WINDOWS
+	Sleep(nsecs * 1000);
+#else
 	(void) sleep(nsecs);
+#endif
 }
+
 
 /* md_getenv()
  *
@@ -366,9 +398,7 @@ md_sleep(nsecs)
  * given string.
  */
 
-char *
-md_getenv(name)
-	const char *name;
+char * md_getenv(const char *name)
 {
 	char *value;
 
@@ -376,6 +406,7 @@ md_getenv(name)
 
 	return(value);
 }
+
 
 /* md_malloc()
  *
@@ -385,15 +416,14 @@ md_getenv(name)
  * when no more memory can be allocated.
  */
 
-char *
-md_malloc(n)
-	int n;
+char * md_malloc(int n)
 {
 	char *t;
 
 	t = malloc(n);
 	return(t);
 }
+
 
 /* md_gseed() (Get Seed)
  *
@@ -413,8 +443,7 @@ md_malloc(n)
  * exactly the same way given the same input.
  */
 
-int
-md_gseed()
+int md_gseed()
 {
 	time_t seconds;
 
@@ -429,20 +458,10 @@ md_gseed()
  * hang when it should quit.
  */
 
-void
-md_exit(status)
-	int status;
+void md_exit(int status)
 {
 	exit(status);
 }
-
-#else
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <direct.h>
-
-#endif
 
 
 /* md_lock():
@@ -516,14 +535,14 @@ void md_mkdir(const char *dir, int mode) {
         if (*p == '/' || *p == '\\') {
             *p = 0;
 		#ifdef WINDOWS
-			mkdir(tmp);
+			_mkdir(tmp);
 		#else
             mkdir(tmp, S_IRWXU);
 		#endif
             *p = '/';
         }
 #ifdef WINDOWS
-	mkdir(tmp);
+	_mkdir(tmp);
 #else
     mkdir(tmp, mode);
 #endif
