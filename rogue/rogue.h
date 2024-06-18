@@ -48,17 +48,8 @@
 #ifndef _ROGUE_H_
 #define _ROGUE_H_
 
-#if defined(WIN32) || defined(_WIN32) || defined(_WIN64) || defined(WIN64)
-	#ifndef _WIN32
-		#define _WIN32
-	#endif
-#else
-	#ifndef __linux
-		#define __linux
-	#endif
-#endif
+#include "init.h"
 
-#define boolean char
 
 #define NOTHING		((unsigned short)     0)
 #define OBJECT		((unsigned short)    01)

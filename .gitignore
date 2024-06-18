@@ -1,0 +1,10 @@
+/objs/*
+/build/*
+/.vscode/*
+
+*.o
+*.exe
+*.obj
+*.bak
+
+

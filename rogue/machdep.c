@@ -32,7 +32,8 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
+#include "init.h"
+
 #ifndef lint
 #if 0
 static char sccsid[] = "@(#)machdep.c	8.1 (Berkeley) 5/31/93";
@@ -112,8 +113,9 @@ __RCSID("$NetBSD: machdep.c,v 1.13 2005/02/15 12:56:20 jsm Exp $");
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+
 #include "rogue.h"
-#include "pathnames.h"
+// #include "pathnames.h"
 
 /* md_slurp:
  *
@@ -434,6 +436,15 @@ md_exit(status)
 	exit(status);
 }
 
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <direct.h>
+
+#endif
+
+
 /* md_lock():
  *
  * This function is intended to give the user exclusive access to the score
@@ -445,10 +456,10 @@ md_exit(status)
  * the lock is released.
  */
 
-void
-md_lock(l)
-	boolean l;
+void md_lock(boolean l)
 {
+#ifdef WINDOWS
+#else
 	static int fd;
 	short tries;
 
@@ -467,6 +478,7 @@ md_lock(l)
 		(void)flock(fd, LOCK_NB);
 		(void)close(fd);
 	}
+#endif
 }
 
 /* md_shell():
@@ -478,16 +490,43 @@ md_lock(l)
  * The effective user id is restored after the shell completes.
  */
 
-void
-md_shell(shell)
-	const char *shell;
+void md_shell(const char *shell)
 {
+#ifdef WINDOWS
+	system(shell);
+#else
 	int w;
-
 	if (!fork()) {
 		execl(shell, shell, (char *) 0);
 	}
 	wait(&w);
+#endif
 }
 
+void md_mkdir(const char *dir, int mode) {
+    static char tmp[2048];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp), "%s", dir);
+    len = strlen(tmp);
+    if (tmp[len - 1] == '/' || tmp[len - 1] == '\\')
+        tmp[len - 1] = 0;
+    for (p = tmp + 1; *p; p++)
+        if (*p == '/' || *p == '\\') {
+            *p = 0;
+		#ifdef WINDOWS
+			mkdir(tmp);
+		#else
+            mkdir(tmp, S_IRWXU);
+		#endif
+            *p = '/';
+        }
+#ifdef WINDOWS
+	mkdir(tmp);
+#else
+    mkdir(tmp, mode);
 #endif
+}
+
+
