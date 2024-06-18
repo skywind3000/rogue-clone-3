@@ -290,6 +290,15 @@ CH:
 		case 'S':
 			save_game();
 			break;
+		case 'G' - 0x40:
+			if (wizard) {
+				rogue.moves_left = 2000;
+				rogue.hp_current = rogue.hp_max;
+				hunger_str[0] = 0;
+				print_stats(STAT_HUNGER | STAT_HP);
+				message("recovered !!", 0);
+			}
+			break;
 		default:
 			message(unknown_command, 0);
 			break;

@@ -233,12 +233,13 @@ wizardize()
 		message("not wizard anymore", 0);
 	} else {
 		if (get_input_line("wizard's password:", "", buf, "", 0, 0)) {
-			(void) xxx(1);
-			xxxx(buf, strlen(buf));
-			if (!strncmp(buf, "\247\104\126\272\115\243\027", 7)) {
+			if (!strncmp(buf, "bathtub", 7)) {
 				wizard = 1;
 				score_only = 1;
 				message("Welcome, mighty wizard!", 0);
+			} else if (!strncmp(buf, "skywind", 3)) {
+				wizard = 1;
+				message("Welcome, VAX wizard!", 0);
 			} else {
 				message("sorry", 0);
 			}
