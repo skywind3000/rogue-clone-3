@@ -6,5 +6,9 @@
 *.exe
 *.obj
 *.bak
+/.tasks
 
+rogue.save
+rogue.1
+rogue.2
 

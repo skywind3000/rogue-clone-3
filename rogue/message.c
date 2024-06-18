@@ -155,7 +155,11 @@ get_input_line(prompt, insert, buf, if_cancelled, add_blank, do_echo)
 		refresh();
 	}
 
-	while (((ch = rgetchar()) != '\r') && (ch != '\n') && (ch != CANCEL)) {
+	while (1) {
+		ch = rgetchar();
+		if (ch == '\r' || ch == '\n' || ch == CANCEL)
+			break;
+
 		if ((ch >= ' ') && (ch <= '~') && (i < MAX_TITLE_LENGTH-2)) {
 			if ((ch != ' ') || (i > 0)) {
 				buf[i++] = ch;
@@ -199,7 +203,11 @@ rgetchar()
 	int ch;
 
 	for(;;) {
+	#ifdef WINDOWS
+		ch = getch();
+	#else
 		ch = getchar();
+	#endif
 
 		switch(ch) {
 		case '\022':
