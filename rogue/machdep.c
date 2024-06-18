@@ -549,3 +549,88 @@ void md_mkdir(const char *dir, int mode) {
 }
 
 
+char * md_homedir(void) {
+#ifdef WINDOWS
+	return getenv("USERPROFILE");
+#else
+	return getenv("HOME");
+#endif
+}
+
+
+char * md_savedir(void) {
+	char *base = getenv("XDG_DATA_HOME");
+	if (!base || base[0] != '/') {
+		char *home = md_homedir();
+#ifdef WINDOWS
+		if (!home)
+			clean_up("md_scorefile: invalid $HOME\n");
+		base = calloc(strlen(home) + 14, sizeof(char));
+		snprintf(base, strlen(home) + 14, "%s/_rogue-clone", home);
+#else
+		if (!home || home[0] != '/')
+			clean_up("md_scorefile: invalid $HOME\n");
+		base = calloc(strlen(home) + 14, sizeof(char));
+		snprintf(base, strlen(home) + 14, "%s/.local/share", home);
+#endif
+	}
+
+	char *dir = calloc(strlen(base) + 13, sizeof(char));
+	snprintf(dir, strlen(base) + 13, "%s/rogue-clone", base);
+
+#ifdef WINDOWS
+	int i, size = (int)strlen(dir);
+	for (i = 0; i < size; i++) {
+		if (dir[i] == '\\')
+			dir[i] = '/';
+	}
+#endif
+
+	md_mkdir(dir, 0755);
+
+	free(base);
+	return dir;
+}
+
+
+char * md_scorefile(void) {
+	static char filename[2048] = {0};
+	if (filename[0] == 0) {
+		char *dir = md_savedir();
+		char *file = calloc(strlen(dir) + 13, sizeof(char));
+		snprintf(file, strlen(dir) + 13, "%s/ranking", dir);
+
+		free(dir);
+		memcpy(filename, file, strlen(file));
+		free(file);
+	}
+	return filename;
+}
+
+/*
+ * Copy src to string dst of size siz.  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz == 0).
+ * Returns strlen(src); if retval >= siz, truncation occurred.
+ */
+size_t md_strlcpy(char *dst, const char *src, size_t siz)
+{
+	char *d = dst;
+	const char *s = src;
+	size_t n = siz;
+	/* Copy as many bytes as will fit */
+	if (n != 0) {
+		while (--n != 0) {
+			if ((*d++ = *s++) == '\0')
+				break;
+		}
+  }
+	/* Not enough room in dst, add NUL and traverse rest of src */
+	if (n == 0) {
+		if (siz != 0)
+			*d = '\0';		/* NUL-terminate dst */
+		while (*s++)
+			;
+	}
+	return(s - src - 1);	/* count does not include NUL */
+}
+

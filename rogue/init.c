@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
+#include "init.h"
 #ifndef lint
 #if 0
 static char sccsid[] = "@(#)init.c	8.1 (Berkeley) 5/31/93";
@@ -84,8 +84,9 @@ init(argc, argv)
 {
 	const char *pn;
 	int seed;
-	int fd;
 
+#ifndef WINDOWS
+	int fd = 0;
 	gid = getgid();
 	egid = getegid();
 	setegid(gid);
@@ -94,7 +95,8 @@ init(argc, argv)
 	if (fd < 3)
 		exit(1);
 	close(fd);
-
+#else
+#endif
 	seed = 0;
 	pn = md_gln();
 	if ((!pn) || (strlen(pn) >= MAX_OPT_LEN)) {

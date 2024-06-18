@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
+#include "init.h"
 #ifndef lint
 __COPYRIGHT("@(#) Copyright (c) 1988, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n");

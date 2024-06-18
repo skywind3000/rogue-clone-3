@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
+#include "init.h"
 #ifndef lint
 #if 0
 static char sccsid[] = "@(#)message.c	8.1 (Berkeley) 5/31/93";
@@ -54,7 +54,9 @@ __RCSID("$NetBSD: message.c,v 1.10 2003/08/07 09:37:38 agc Exp $");
  */
 
 #include <signal.h>
+#ifndef WINDOWS
 #include <termios.h>
+#endif
 #include "rogue.h"
 
 char msgs[NMESSAGES][DCOLS] = {"", "", "", "", ""};

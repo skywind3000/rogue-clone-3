@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
+#include "init.h"
 #ifndef lint
 #if 0
 static char sccsid[] = "@(#)score.c	8.1 (Berkeley) 5/31/93";
@@ -55,7 +55,7 @@ __RCSID("$NetBSD: score.c,v 1.11 2003/08/07 09:37:40 agc Exp $");
 
 #include <stdio.h>
 #include "rogue.h"
-#include "pathnames.h"
+// #include "pathnames.h"
 
 void
 killed_by(monster, other)
@@ -206,17 +206,24 @@ put_scores(monster, other)
 	FILE *fp;
 	long s;
 	boolean dopause = score_only;
+	char *scorefile = md_scorefile();
 
 	md_lock(1);
 
+#ifndef WINDOWS
 	setegid(egid);
-	if ((fp = fopen(_PATH_SCOREFILE, "r+")) == NULL &&
-	    (fp = fopen(_PATH_SCOREFILE, "w+")) == NULL) {
+#endif
+	if ((fp = fopen(scorefile, "r+")) == NULL &&
+	    (fp = fopen(scorefile, "w+")) == NULL) {
+#ifndef WINDOWS
 		setegid(gid);
+#endif
 		message("cannot read/write/create score file", 0);
 		sf_error();
 	}
+#ifndef WINDOWS
 	setegid(gid);
+#endif
 	rewind(fp);
 	(void) xxx(1);
 
